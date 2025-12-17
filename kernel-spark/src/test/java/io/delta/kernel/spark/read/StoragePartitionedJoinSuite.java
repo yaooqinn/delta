@@ -247,10 +247,6 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
     // Note: This is a heuristic check - SPJ should reduce or eliminate exchanges
     boolean hasExchange = containsExchange(plan);
 
-    // For debugging - print the plan
-    System.out.println("Query plan for SPJ join:");
-    System.out.println(result.queryExecution().sparkPlan().toString());
-
     // Note: In some Spark versions and configurations, Exchange might still appear
     // even with SPJ due to other optimizations or requirements.
     // The key validation is that partitioning is reported correctly.
