@@ -339,6 +339,55 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
         "Should have 3 distinct partition values (A, B, C) even though there are 5 rows");
   }
 
+  @Test
+  public void testOutputPartitioningWithSPJDisabled(@TempDir File tempDir) {
+    String tableName = "spj_disabled_table";
+    String tablePath = tempDir.getAbsolutePath();
+
+    // Create a partitioned table
+    spark.sql(
+        String.format(
+            "CREATE TABLE %s (id INT, category STRING, value DOUBLE) "
+                + "USING delta LOCATION '%s' PARTITIONED BY (category)",
+            tableName, tablePath));
+    spark.sql(
+        String.format(
+            "INSERT INTO %s VALUES "
+                + "(1, 'A', 10.0), "
+                + "(2, 'A', 20.0), "
+                + "(3, 'B', 30.0)",
+            tableName));
+
+    // Create options map with SPJ disabled
+    java.util.HashMap<String, String> optionsMap = new java.util.HashMap<>();
+    optionsMap.put("enableStoragePartitionedJoin", "false");
+    CaseInsensitiveStringMap options = new CaseInsensitiveStringMap(optionsMap);
+
+    SparkTable table =
+        new SparkTable(
+            Identifier.of(new String[] {"spark_catalog", "default"}, tableName),
+            tablePath,
+            options);
+
+    ScanBuilder scanBuilder = table.newScanBuilder(options);
+    Scan scan = scanBuilder.build();
+
+    assertTrue(scan instanceof SparkScan, "Scan should be instance of SparkScan");
+    SparkScan sparkScan = (SparkScan) scan;
+
+    // Get the output partitioning
+    Partitioning partitioning = sparkScan.outputPartitioning();
+
+    // Verify it returns UnknownPartitioning when SPJ is disabled
+    assertTrue(
+        partitioning instanceof UnknownPartitioning,
+        "Should return UnknownPartitioning when SPJ is disabled");
+
+    UnknownPartitioning unknown = (UnknownPartitioning) partitioning;
+    assertEquals(
+        0, unknown.numPartitions(), "UnknownPartitioning should have 0 partitions");
+  }
+
   /**
    * Helper method to check if a SparkPlan contains an Exchange node.
    *

@@ -87,8 +87,18 @@ public class SparkBatch implements Batch {
   public InputPartition[] planInputPartitions() {
     SparkSession sparkSession = SparkSession.active();
 
-    // If table has partition columns, group files by partition values for SPJ
-    if (partitionSchema.fields().length > 0) {
+    // Check if SPJ is enabled via option (default: true)
+    boolean spjEnabled = true;
+    if (scalaOptions.contains(
+        org.apache.spark.sql.delta.DeltaOptions.ENABLE_STORAGE_PARTITIONED_JOIN())) {
+      String value =
+          scalaOptions.apply(
+              org.apache.spark.sql.delta.DeltaOptions.ENABLE_STORAGE_PARTITIONED_JOIN());
+      spjEnabled = Boolean.parseBoolean(value);
+    }
+
+    // If table has partition columns and SPJ is enabled, group files by partition values for SPJ
+    if (spjEnabled && partitionSchema.fields().length > 0) {
       // Group files by their partition values using LinkedHashMap to preserve insertion order
       Map<InternalRow, List<PartitionedFile>> filesByPartition =
           partitionedFiles.stream()
@@ -114,7 +124,7 @@ public class SparkBatch implements Batch {
       return inputPartitions.toArray(new InputPartition[0]);
     }
 
-    // For non-partitioned tables, use the default behavior
+    // For non-partitioned tables or when SPJ is disabled, use the default behavior
     long maxSplitBytes =
         PartitionUtils.calculateMaxSplitBytes(
             sparkSession, totalBytes, partitionedFiles.size(), sqlConf);

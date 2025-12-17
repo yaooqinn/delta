@@ -334,8 +334,13 @@ public class SparkScan
 
   @Override
   public Partitioning outputPartitioning() {
-    // If table has partition columns, return KeyGroupedPartitioning
-    if (partitionSchema.fields().length > 0) {
+    // Check if SPJ is enabled via option (default: true)
+    boolean spjEnabled =
+        options.getBoolean(
+            org.apache.spark.sql.delta.DeltaOptions.ENABLE_STORAGE_PARTITIONED_JOIN(), true);
+
+    // If table has partition columns and SPJ is enabled, return KeyGroupedPartitioning
+    if (spjEnabled && partitionSchema.fields().length > 0) {
       NamedReference[] partitionRefs =
           Arrays.stream(partitionSchema.fields())
               .map(field -> FieldReference.column(field.name()))
