@@ -41,6 +41,9 @@ import org.apache.spark.sql.catalyst.expressions.InterpretedPredicate;
 import org.apache.spark.sql.connector.expressions.FieldReference;
 import org.apache.spark.sql.connector.expressions.NamedReference;
 import org.apache.spark.sql.connector.read.*;
+import org.apache.spark.sql.connector.read.partitioning.KeyGroupedPartitioning;
+import org.apache.spark.sql.connector.read.partitioning.Partitioning;
+import org.apache.spark.sql.connector.read.partitioning.UnknownPartitioning;
 import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
 import org.apache.spark.sql.delta.DeltaOptions;
 import org.apache.spark.sql.execution.datasources.*;
@@ -51,7 +54,8 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 /** Spark DSV2 Scan implementation backed by Delta Kernel. */
-public class SparkScan implements Scan, SupportsReportStatistics, SupportsRuntimeV2Filtering {
+public class SparkScan
+    implements Scan, SupportsReportStatistics, SupportsRuntimeV2Filtering, SupportsReportPartitioning {
 
   /** Supported streaming options for the V2 connector. */
   private static final List<String> SUPPORTED_STREAMING_OPTIONS =
@@ -326,6 +330,35 @@ public class SparkScan implements Scan, SupportsReportStatistics, SupportsRuntim
       this.partitionedFiles = runtimeFilteredPartitionedFiles;
       this.totalBytes = this.partitionedFiles.stream().mapToLong(PartitionedFile::fileSize).sum();
     }
+  }
+
+  @Override
+  public Partitioning outputPartitioning() {
+    // If table has partition columns, return KeyGroupedPartitioning
+    if (partitionSchema.fields().length > 0) {
+      NamedReference[] partitionRefs =
+          Arrays.stream(partitionSchema.fields())
+              .map(field -> FieldReference.column(field.name()))
+              .toArray(NamedReference[]::new);
+
+      // Calculate number of distinct partition values
+      int numPartitions = calculateDistinctPartitions();
+
+      return new KeyGroupedPartitioning(partitionRefs, numPartitions);
+    }
+    return new UnknownPartitioning(0);
+  }
+
+  /**
+   * Calculate the number of distinct partition values from planned files.
+   *
+   * @return the number of distinct partition value combinations
+   */
+  private int calculateDistinctPartitions() {
+    ensurePlanned();
+    // Count distinct partition values from planned files
+    return (int)
+        partitionedFiles.stream().map(PartitionedFile::partitionValues).distinct().count();
   }
 
   /**

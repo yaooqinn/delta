@@ -305,6 +305,13 @@ object DeltaOptions extends DeltaLogging {
    */
   val WRITE_PARTITION_COLUMNS = "writePartitionColumns"
 
+  /**
+   * An option to enable/disable Storage Partitioned Join (SPJ) support.
+   * When enabled, Delta tables with the same partition columns can perform shuffle-free joins.
+   * Requires Apache Spark 3.3 or later.
+   */
+  val ENABLE_STORAGE_PARTITIONED_JOIN = "enableStoragePartitionedJoin"
+
   val validOptionKeys : Set[String] = Set(
     REPLACE_WHERE_OPTION,
     MERGE_SCHEMA_OPTION,
@@ -339,7 +346,8 @@ object DeltaOptions extends DeltaLogging {
     "path",
     VERSION_AS_OF,
     TIMESTAMP_AS_OF,
-    WRITE_PARTITION_COLUMNS
+    WRITE_PARTITION_COLUMNS,
+    ENABLE_STORAGE_PARTITIONED_JOIN
   )
 
 

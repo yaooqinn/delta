@@ -20,10 +20,14 @@ import io.delta.kernel.expressions.Predicate;
 import io.delta.kernel.spark.utils.PartitionUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
@@ -82,6 +86,35 @@ public class SparkBatch implements Batch {
   @Override
   public InputPartition[] planInputPartitions() {
     SparkSession sparkSession = SparkSession.active();
+
+    // If table has partition columns, group files by partition values for SPJ
+    if (partitionSchema.fields().length > 0) {
+      // Group files by their partition values using LinkedHashMap to preserve insertion order
+      Map<InternalRow, List<PartitionedFile>> filesByPartition =
+          partitionedFiles.stream()
+              .collect(
+                  Collectors.groupingBy(
+                      PartitionedFile::partitionValues,
+                      LinkedHashMap::new,
+                      Collectors.toList()));
+
+      // Create one InputPartition per partition value group
+      // Each group will be further split by maxSplitBytes
+      List<InputPartition> inputPartitions = new ArrayList<>();
+      for (List<PartitionedFile> files : filesByPartition.values()) {
+        long groupBytes = files.stream().mapToLong(PartitionedFile::fileSize).sum();
+        long maxSplitBytes =
+            PartitionUtils.calculateMaxSplitBytes(sparkSession, groupBytes, files.size(), sqlConf);
+
+        scala.collection.Seq<FilePartition> filePartitions =
+            FilePartition$.MODULE$.getFilePartitions(
+                sparkSession, JavaConverters.asScalaBuffer(files).toSeq(), maxSplitBytes);
+        inputPartitions.addAll(JavaConverters.seqAsJavaList(filePartitions));
+      }
+      return inputPartitions.toArray(new InputPartition[0]);
+    }
+
+    // For non-partitioned tables, use the default behavior
     long maxSplitBytes =
         PartitionUtils.calculateMaxSplitBytes(
             sparkSession, totalBytes, partitionedFiles.size(), sqlConf);
