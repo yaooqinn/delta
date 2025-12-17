@@ -88,12 +88,10 @@ public class SparkBatch implements Batch {
     SparkSession sparkSession = SparkSession.active();
 
     // Check if SPJ is enabled via option (default: true)
+    String spjOptionKey = org.apache.spark.sql.delta.DeltaOptions.ENABLE_STORAGE_PARTITIONED_JOIN();
     boolean spjEnabled = true;
-    if (scalaOptions.contains(
-        org.apache.spark.sql.delta.DeltaOptions.ENABLE_STORAGE_PARTITIONED_JOIN())) {
-      String value =
-          scalaOptions.apply(
-              org.apache.spark.sql.delta.DeltaOptions.ENABLE_STORAGE_PARTITIONED_JOIN());
+    if (scalaOptions.contains(spjOptionKey)) {
+      String value = scalaOptions.apply(spjOptionKey);
       spjEnabled = Boolean.parseBoolean(value);
     }
 
