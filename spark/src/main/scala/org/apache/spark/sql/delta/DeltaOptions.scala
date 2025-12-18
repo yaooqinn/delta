@@ -347,7 +347,7 @@ object DeltaOptions extends DeltaLogging {
     VERSION_AS_OF,
     TIMESTAMP_AS_OF,
     WRITE_PARTITION_COLUMNS,
-    ENABLE_STORAGE_PARTITIONED_JOIN,
+    ENABLE_STORAGE_PARTITIONED_JOIN
   )
 
   /** Iterates over all user passed options and logs any that are not valid. */
