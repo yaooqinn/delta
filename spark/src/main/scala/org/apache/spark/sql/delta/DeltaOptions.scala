@@ -312,7 +312,7 @@ object DeltaOptions extends DeltaLogging {
    */
   val ENABLE_STORAGE_PARTITIONED_JOIN = "enableStoragePartitionedJoin"
 
-  val validOptionKeys : Set[String] = Set(
+  val validOptionKeys: Set[String] = Set(
     REPLACE_WHERE_OPTION,
     MERGE_SCHEMA_OPTION,
     EXCLUDE_REGEX_OPTION,
