@@ -39,7 +39,7 @@ import scala.collection.JavaConverters;
  *
  * <p>SPJ enables shuffle-free joins for tables with matching partition columns.
  */
-public class StoragePartitionedJoinSuiteNew extends SparkDsv2TestBase {
+public class StoragePartitionedJoinTest extends SparkDsv2TestBase {
 
   @Test
   public void testPartitionedTableReportsKeyGroupedPartitioning(@TempDir File tempDir) {
