@@ -102,9 +102,7 @@ public class SparkBatch implements Batch {
           partitionedFiles.stream()
               .collect(
                   Collectors.groupingBy(
-                      PartitionedFile::partitionValues,
-                      LinkedHashMap::new,
-                      Collectors.toList()));
+                      PartitionedFile::partitionValues, LinkedHashMap::new, Collectors.toList()));
 
       // Create one InputPartition per partition value group
       // Each group will be further split by maxSplitBytes

@@ -55,7 +55,10 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 /** Spark DSV2 Scan implementation backed by Delta Kernel. */
 public class SparkScan
-    implements Scan, SupportsReportStatistics, SupportsRuntimeV2Filtering, SupportsReportPartitioning {
+    implements Scan,
+        SupportsReportStatistics,
+        SupportsRuntimeV2Filtering,
+        SupportsReportPartitioning {
 
   /** Supported streaming options for the V2 connector. */
   private static final List<String> SUPPORTED_STREAMING_OPTIONS =
@@ -362,8 +365,7 @@ public class SparkScan
   private int calculateDistinctPartitions() {
     ensurePlanned();
     // Count distinct partition values from planned files
-    return (int)
-        partitionedFiles.stream().map(PartitionedFile::partitionValues).distinct().count();
+    return (int) partitionedFiles.stream().map(PartitionedFile::partitionValues).distinct().count();
   }
 
   /**

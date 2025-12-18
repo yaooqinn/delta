@@ -104,8 +104,7 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
             "CREATE TABLE %s (id INT, name STRING, value DOUBLE) USING delta LOCATION '%s'",
             tableName, tablePath));
     spark.sql(
-        String.format(
-            "INSERT INTO %s VALUES (1, 'Alice', 10.5), (2, 'Bob', 20.5)", tableName));
+        String.format("INSERT INTO %s VALUES (1, 'Alice', 10.5), (2, 'Bob', 20.5)", tableName));
 
     // Create a SparkTable and build a scan
     CaseInsensitiveStringMap options = new CaseInsensitiveStringMap(new java.util.HashMap<>());
@@ -183,8 +182,7 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
         "month", keyGrouped.keys()[1].toString(), "Second partition key should be 'month'");
 
     // Verify number of partitions (distinct combinations of year and month)
-    assertEquals(
-        3, keyGrouped.numPartitions(), "Should have 3 distinct partition combinations");
+    assertEquals(3, keyGrouped.numPartitions(), "Should have 3 distinct partition combinations");
   }
 
   @Test
@@ -207,10 +205,7 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
             table1, path1));
     spark.sql(
         String.format(
-            "INSERT INTO %s VALUES "
-                + "(1, 'A', 10.0), "
-                + "(2, 'B', 20.0), "
-                + "(3, 'A', 30.0)",
+            "INSERT INTO %s VALUES " + "(1, 'A', 10.0), " + "(2, 'B', 20.0), " + "(3, 'A', 30.0)",
             table1));
 
     // Create second table partitioned by 'category'
@@ -327,8 +322,7 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
     Partitioning partitioning = sparkScan.outputPartitioning();
 
     assertTrue(
-        partitioning instanceof KeyGroupedPartitioning,
-        "Should return KeyGroupedPartitioning");
+        partitioning instanceof KeyGroupedPartitioning, "Should return KeyGroupedPartitioning");
 
     KeyGroupedPartitioning keyGrouped = (KeyGroupedPartitioning) partitioning;
 
@@ -352,10 +346,7 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
             tableName, tablePath));
     spark.sql(
         String.format(
-            "INSERT INTO %s VALUES "
-                + "(1, 'A', 10.0), "
-                + "(2, 'A', 20.0), "
-                + "(3, 'B', 30.0)",
+            "INSERT INTO %s VALUES " + "(1, 'A', 10.0), " + "(2, 'A', 20.0), " + "(3, 'B', 30.0)",
             tableName));
 
     // Create options map with SPJ disabled
@@ -384,8 +375,7 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
         "Should return UnknownPartitioning when SPJ is disabled");
 
     UnknownPartitioning unknown = (UnknownPartitioning) partitioning;
-    assertEquals(
-        0, unknown.numPartitions(), "UnknownPartitioning should have 0 partitions");
+    assertEquals(0, unknown.numPartitions(), "UnknownPartitioning should have 0 partitions");
   }
 
   /**
@@ -399,8 +389,7 @@ public class StoragePartitionedJoinSuite extends SparkDsv2TestBase {
       return true;
     }
     // Recursively check children
-    return JavaConverters.seqAsJavaList(plan.children())
-        .stream()
+    return JavaConverters.seqAsJavaList(plan.children()).stream()
         .anyMatch(child -> containsExchange((SparkPlan) child));
   }
 }

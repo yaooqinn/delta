@@ -350,7 +350,6 @@ object DeltaOptions extends DeltaLogging {
     ENABLE_STORAGE_PARTITIONED_JOIN,
   )
 
-
   /** Iterates over all user passed options and logs any that are not valid. */
   def verifyOptions(options: CaseInsensitiveMap[String]): Unit = {
     val invalidUserOptions = SQLConf.get.redactOptions(options --
